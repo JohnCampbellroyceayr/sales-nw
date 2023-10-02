@@ -4,12 +4,14 @@ Sub Import()
 
     Dim fileData, textArray, line As Object
     
-
     fileData = readData(buildPath("/quotes/test.txt"))
     textArray = Split(fileData, vbCrLf)
-    Dim i As Integer
+    Dim i As Integer, location As String
     For i = 0 To UBound(textArray)
-        writeLine(textArray(i))
+        location = findLocation(textArray(i), Range("AE3"))
+        If (Trim(location) <> "") Then
+            writeLine textArray(i), Range(location)
+        End If
     Next i
 
 End Sub
@@ -17,14 +19,14 @@ End Sub
 Sub Export()
     Dim path As String, valueRange As Range
     path = buildPath("/quotes/test.txt")
-    ' valueRange = findRange(Range("AE3"))
+    ' valueRange = findRange(Range("AE3")) 
     
     writeData path, getParamString(findRange(Range("AE3")))
     
 
 End Sub
 
-
+    
 Function findRange(startRange As Range) As Range
     Dim failSafe As Integer
     Dim currentRange As Range
@@ -38,27 +40,55 @@ Function findRange(startRange As Range) As Range
             Exit Function
         End If
         
-        Set currentRange = currentRange.Offset(1, 0)
+        Set currentRange = currentRange.offset(1, 0)
         failSafe = failSafe + 1
     Loop
 End Function
 
 'functions for reading export data
-Function writeLine(line As String)
-    If (validData(line)) Then
+
+    Function findLocation(line, startRange As Range)
+        Dim failSafe As Integer
+        Dim currentRange As Range
+        Dim name As String
         Dim textArr
         textArr = Split(line, vbtab)
-        If (textArr(0) <> "PRICEEACH") Then
-            Range(textArr(2)).value = textArr(1)
-        End If
-    End If
-End Function
+        if Ubound(textArr) > -1 Then
+            name = Trim(textArr(0))
+            failSafe = 0
+            Set currentRange = startRange
+            
+            Do While failSafe < 100
+                If IsEmpty(currentRange) Then
+                    findLocation = ""
+                    Exit Function
+                ElseIf name = Trim(currentRange.Value) Then
+                    findLocation = currentRange.Offset(0, 1).Value
+                    Exit Function
+                End If
+                
+                Set currentRange = currentRange.offset(1, 0)
+                failSafe = failSafe + 1
+            Loop
+        End if
+        
+    End Function
 
-Function validData(data As String) As Boolean
-    If (UBound(Split(data, vbtab)) > 1) Then
-        validData = True
-    End If
-End Function
+    Function writeLine(line, location As Range)
+        If (validData(line)) Then
+            Dim textArr
+            textArr = Split(line, vbtab)
+            If (textArr(0) <> "PRICEEACH") Then
+                location.value = textArr(1)
+            End If
+        End If
+    End Function
+
+    Function validData(data) As Boolean
+        If (UBound(Split(data, vbtab)) > 0) Then
+            validData = True
+        End If
+    End Function
 
 'functions for gettting export data
     Function getParamString(valueRange As Range) As String
@@ -82,19 +112,18 @@ End Function
         Dim prop As String, value As String, location As String
         
         prop = cell.value
-        location = cell.offset(0, 1).value
         value = cell.offset(0, 2).value
-        getValue = prop & vbtab & value & vbtab & location & vbCrLf
+        getValue = prop & vbtab & value & vbCrLf
     End Function
 
-'functions for editing text files    
+'functions for editing text files
 
     Function buildPath(path) As String
-        buildPath = ThisWorkbook.Path & path
+        buildPath = ThisWorkbook.path & path
     End Function
 
     Function writeData(path, newData)
-        Dim fileNumber As Integer    
+        Dim fileNumber As Integer
     
         
         fileNumber = FreeFile
