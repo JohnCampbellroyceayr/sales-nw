@@ -1,12 +1,8 @@
 Attribute VB_Name = "TestMod"
 
 
-Sub test()
-    Dim path As String, obj As Object
-    
-    path = buildPath("/quotes/test.json")
-
-    obj = ParseJson(readData(path))
+Sub test(arg As String)
+    MsgBox arg
 End Sub
 
 

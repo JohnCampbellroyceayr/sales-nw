@@ -1,14 +1,30 @@
 Attribute VB_Name = "ImportModule"
 
+Public mainFilePath As String
+
+
+Function getMainTextFile()
+    getMainTextFile = "C:\Users\John Campbell\Documents\John Coding projects\sales something or other\sales nw\info-temp"
+End Function
+
+
+
 Sub Import()
 
     Dim fileData, textArray, line As Object
     
-    fileData = readData(buildPath("/quotes/test.txt"))
+    Dim path As String
+    Dim typeName As String, fileName As String
+    typeName = ActiveSheet.Name
+    fileName = "test.txt"
+    path = buildMainFilesPath("\quote items\" & typeName & "\" & fileName)
+
+    
+    fileData = readData(path)
     textArray = Split(fileData, vbCrLf)
     Dim i As Integer, location As String
     For i = 0 To UBound(textArray)
-        location = findLocation(textArray(i), Range("AE3"))
+        location = findLocation(textArray(i), Range("AR3"))
         If (Trim(location) <> "") Then
             writeLine textArray(i), Range(location)
         End If
@@ -17,11 +33,16 @@ Sub Import()
 End Sub
 
 Sub Export()
+
     Dim path As String, valueRange As Range
-    path = buildPath("/quotes/test.txt")
-    ' valueRange = findRange(Range("AE3")) 
+    'Change later
+    Dim typeName As String, fileName As String
+    typeName = ActiveSheet.Name
+    fileName = "test.txt"
+    path = buildMainFilesPath("\quote items\" & typeName & "\" & fileName)
+    ' valueRange = findRange(Range("AR3"))
     
-    writeData path, getParamString(findRange(Range("AE3")))
+    writeData path, getParamString(findRange(Range("AR3")))
     
 
 End Sub
@@ -63,7 +84,7 @@ End Function
                     findLocation = ""
                     Exit Function
                 ElseIf name = Trim(currentRange.Value) Then
-                    findLocation = currentRange.Offset(0, 1).Value
+                    findLocation = currentRange.Offset(0, 2).Value
                     Exit Function
                 End If
                 
@@ -78,9 +99,7 @@ End Function
         If (validData(line)) Then
             Dim textArr
             textArr = Split(line, vbtab)
-            If (textArr(0) <> "PRICEEACH") Then
-                location.value = textArr(1)
-            End If
+            location.value = textArr(1)
         End If
     End Function
 
@@ -112,7 +131,7 @@ End Function
         Dim prop As String, value As String, location As String
         
         prop = cell.value
-        value = cell.offset(0, 2).value
+        value = cell.offset(0, 3).value
         getValue = prop & vbtab & value & vbCrLf
     End Function
 
@@ -120,6 +139,10 @@ End Function
 
     Function buildPath(path) As String
         buildPath = ThisWorkbook.path & path
+    End Function
+
+    Function buildMainFilesPath(path) As String
+        buildMainFilesPath = getMainTextFile() & path
     End Function
 
     Function writeData(path, newData)
